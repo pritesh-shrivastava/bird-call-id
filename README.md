@@ -114,6 +114,14 @@ npm run dev
 
 The app runs in demo mode (mock predictions) until the ONNX model is placed at `app/public/model/birdclef.onnx`.
 
+### Utility scripts
+
+```bash
+npm run check:labels   # verify BirdCLEF label order + mapping helpers
+npm run prepare:onnx   # copy ONNX Runtime browser assets into public/ort-wasm
+npm run demo:check     # verify mock/demo wiring and prep state
+```
+
 ---
 
 ## Plugging in the real model

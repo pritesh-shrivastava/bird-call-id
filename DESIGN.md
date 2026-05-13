@@ -1,93 +1,189 @@
-# Design: Bird Call Identification PWA
+---
+version: alpha
+name: Bird Call ID
+description: Forest-first bird call identification PWA for Western Ghats species, optimized for offline in-browser inference.
+colors:
+  primary: "#0D1F15"
+  secondary: "#1A3A2A"
+  tertiary: "#2D5A3D"
+  accent: "#4CAF7D"
+  accent-bright: "#6FCF97"
+  muted: "#B2D8C5"
+  neutral: "#F0EAD6"
+typography:
+  h1:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontSize: "2.5rem"
+    fontWeight: 700
+    lineHeight: 1.05
+    letterSpacing: "-0.03em"
+  h2:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontSize: "1.5rem"
+    fontWeight: 650
+    lineHeight: 1.15
+    letterSpacing: "-0.02em"
+  body-md:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontSize: "1rem"
+    fontWeight: 400
+    lineHeight: 1.6
+    letterSpacing: "0em"
+  label-sm:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    fontSize: "0.8125rem"
+    fontWeight: 600
+    lineHeight: 1.2
+    letterSpacing: "0.04em"
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
+rounded:
+  sm: "12px"
+  md: "16px"
+  lg: "24px"
+  pill: "9999px"
+elevation:
+  card: "0 12px 30px rgba(0, 0, 0, 0.24)"
+  float: "0 20px 50px rgba(0, 0, 0, 0.28)"
+components:
+  app-shell:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.neutral}"
+    typography: "{typography.body-md}"
+  record-button:
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.pill}"
+    padding: "16px 24px"
+  record-button-active:
+    backgroundColor: "{colors.accent-bright}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.pill}"
+    padding: "16px 24px"
+  result-card:
+    backgroundColor: "{colors.secondary}"
+    textColor: "{colors.neutral}"
+    rounded: "{rounded.lg}"
+    padding: "20px"
+  waveform-bar:
+    backgroundColor: "{colors.tertiary}"
+    rounded: "{rounded.sm}"
+    height: "4px"
+  supporting-copy:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.muted}"
+    rounded: "{rounded.md}"
+    padding: "0px"
+---
 
-## Problem Statement
+## Overview
 
-Build a bird call identification app (web + mobile PWA) for bird species found in the Western Ghats of India. The app listens to a short recording and identifies the species.
+Bird Call ID is a forest-first PWA for identifying Western Ghats bird species from a short recording. The experience should feel like a field guide, not a lab dashboard: calm, fast, legible, and trustworthy.
 
-The gap in the space: hundreds of BirdCLEF notebooks exist on Kaggle. Almost none are deployed as real products. The goal here is the full stack — fine-tuned audio ML model running in the browser, offline, with no backend.
+The product differentiator is end-to-end delivery. The model is meant to run offline in the browser after load, with no backend inference path in the final product.
 
-## Constraints
+## Colors
 
-- No backend hosting budget (free tier acceptable, prefer zero-server for final product)
-- **BirdCLEF 2024** dataset — specifically designed for birds of the Western Ghats (~182 species), publicly available on Kaggle, with real competition baselines
+- **Primary (`#0D1F15`)**: deep forest background; most screens live here.
+- **Secondary (`#1A3A2A`)**: panel and card surface.
+- **Tertiary (`#2D5A3D`)**: supporting surface and subtle depth.
+- **Accent (`#4CAF7D`)**: primary action, capture state, and success signal.
+- **Accent bright (`#6FCF97`)**: active pulse, waveform highlights, and confidence emphasis.
+- **Muted (`#B2D8C5`)**: secondary text and soft UI chrome.
+- **Neutral (`#F0EAD6`)**: primary readable text on dark surfaces.
 
-## Premises
+Contrast should stay high. The app should never look neon or gimmicky.
 
-1. BirdCLEF 2024 is the right dataset: Western Ghats of India, 182 species, ~60k training clips, active competition with public baselines to reference.
-2. The differentiator vs. other Kaggle notebooks is end-to-end deployment.
-3. A working demo someone can open and use matters more than SOTA accuracy.
-4. In-browser ONNX inference is worth building toward: eliminates hosting, works offline, makes a compelling technical story.
+## Typography
 
-## Approaches Considered
+Inter leads the UI where emphasis matters. System sans serif remains the fallback for speed and consistency across platforms.
 
-### Approach A: Classic Backend (FastAPI + PyTorch)
-- Fine-tune EfficientNet/BirdNET on BirdCLEF, serve via FastAPI, React PWA sends audio to API.
-- Effort: M (1-2 weekends). Risk: Low.
-- Pros: Standard ML engineering pattern, easy model iteration.
-- Cons: Needs hosting, latency on mobile, cold start issues.
+- **H1**: large, compact, confident title treatment.
+- **H2**: section headers for cards and result blocks.
+- **Body**: readable, low-friction text for instructions and analysis.
+- **Label**: slightly tightened, all-purpose metadata style for species names, confidence, and control labels.
 
-### Approach B: In-Browser ONNX Inference
-- Fine-tune in Python, export to ONNX, run inference in browser via onnxruntime-web. WebAudio API for recording, mel spectrogram computed in JS.
-- Effort: L (2-3 weekends). Risk: Med.
-- Pros: Runs offline in-browser — rare, impressive product story.
-- Cons: ONNX export can be finicky; browser audio pipeline is non-trivial.
+Keep copy short. This is a capture flow, not a documentation page.
 
-### Approach C: Hugging Face Spaces (Zero-Infra Demo)
-- Fine-tune model, push to HF Hub, deploy Gradio demo on Spaces. PWA wrapper calls HF Inference API.
-- Effort: S (1 weekend). Risk: Low.
-- Pros: Shareable link quickly, model card is a clean artifact.
-- Cons: Less technically interesting; limited UX control.
+## Layout
 
-## Recommended Approach
+The layout should be vertically stacked and thumb-friendly.
 
-**Phase 1: Approach C — HF Spaces**
-Validate that the fine-tuned model actually works before investing in the ONNX pipeline. Goals: run BirdCLEF baseline training, fine-tune EfficientNet-B0 on BirdCLEF 2024 data, push to Hugging Face Hub, deploy Gradio demo on Spaces. Deliverable: a shareable URL that identifies bird calls from an uploaded audio file.
+- Primary action at or near the center of the viewport.
+- Result area directly below the recording control.
+- Secondary metadata in compact blocks, not dense tables.
+- Respect safe areas and mobile viewports first.
+- Favor generous vertical spacing over multi-column complexity.
 
-**Phase 2: Approach B — ONNX PWA**
-Export the validated model to ONNX, build a React PWA with WebAudio API recording and onnxruntime-web inference. Deliverable: a mobile-installable PWA that identifies birds from a 5-second recording, no server required.
+## Elevation & Depth
 
-## Tech Stack
+Depth is subtle and used only to separate cards from the background.
 
-**Training:**
-- Dataset: BirdCLEF 2024 (`birdclef-2024`, Western Ghats focus)
-- Base model: EfficientNet-B0 on mel spectrograms (simple, well-documented, straightforward ONNX export)
-- Framework: PyTorch + torchaudio
-- Training environment: Kaggle Notebooks (free GPU, dataset co-located)
+- Cards should float slightly above the forest background.
+- Avoid hard outlines unless they improve accessibility.
+- Motion should be soft: pulse rings, waveform breathing, and simple slide-up reveals.
 
-**Preprocessing spec (must match between training and browser):**
-- Sample rate: 32000 Hz
-- Clip length: 5 seconds
-- Mel spectrogram: n_mels=128, hop_length=320, n_fft=1024, fmin=20, fmax=16000
-- Output shape: (128, 501) float32
-- Mel scale: Slaney (htk=False, matches librosa default)
-- These values must be reproduced exactly in the browser. Mismatch = silent accuracy degradation.
-- Validate JS mel output against librosa on 5 test clips before trusting Phase 2 inference.
+## Shapes
 
-**Phase 1 serving:**
-- HF Hub (model weights + model card)
-- Gradio demo on HF Spaces (free tier)
+The product should feel organic but not playful.
 
-**Phase 2 app:**
-- React + Vite PWA
-- onnxruntime-web for in-browser inference
-- WebAudio API for live recording
-- Mel spectrogram computed in JS (`app/src/utils/melSpectrogram.js`)
-- Deployed to Vercel or Cloudflare Pages (static, free)
+- Large rounded buttons for the capture action.
+- Medium-radius cards.
+- Small-radius chips and badges.
+- No sharp-cornered control chrome unless it conveys a technical state.
 
-## Open Questions
+## Components
 
-1. **Model size:** EfficientNet-B0 exported to ONNX is ~20-25MB. First inference on a mid-range Android may exceed 3s. Validate mobile benchmark early; quantize to int8 (~6MB) if needed. Target latency: 5s on mid-range Android for v1.
-2. **Recording UX:** Press-and-hold for 5 seconds, then inference on release. Do NOT attempt sliding-window real-time inference for v1 — significantly higher complexity with no user-visible benefit.
-3. **ONNX export parity:** After exporting to ONNX, top-1 predictions must match PyTorch on >99% of the validation set before proceeding to Phase 2.
-4. **Audio preprocessing in browser:** Validate JS mel spectrogram output against librosa on at least 5 test clips before trusting inference.
+### App shell
+The app shell uses the forest background with cream text. This creates a night-in-the-garden mood that fits the subject matter and keeps the UI distinct from generic AI dashboards.
 
-## Success Criteria
+### Record button
+The record button is the visual anchor.
+- Use the accent color for the default state.
+- Use the brighter accent for active recording and pulse feedback.
+- Keep the label short and direct.
 
-- **Phase 1:** A URL someone can open that correctly identifies Western Ghats bird species from uploaded audio. Model achieves cmAP >= 0.65 on the BirdCLEF 2024 public validation set. Model card on HF Hub with architecture, dataset, and score.
-- **Phase 2:** A PWA installable on mobile. Press-and-hold records 5s, inference completes within 5s on mid-range Android, no backend call during inference. Low-confidence state (< 0.4) shows "no bird detected" instead of a wrong ID.
+### Result card
+The result card should present the species, confidence, and any fallback message clearly.
+- Make the predicted species the highest-priority text.
+- Keep lower-confidence states explicit and honest.
+- Use compact supporting metadata.
 
-## Distribution
+### Waveform
+Waveform bars and activity indicators should be readable at a glance, but never overpower the result.
+- Use accent-bright for active energy.
+- Keep animation simple and loopable.
 
-- Phase 1: Hugging Face Spaces
-- Phase 2: Vercel or Cloudflare Pages (static PWA)
-- GitHub repo: README with demo, training details, model architecture, preprocessing spec, results
+## Do's and Don'ts
+
+- **Do** make the experience work cleanly on mobile first.
+- **Do** keep the UI calm, not noisy.
+- **Do** preserve the offline-first story in the visual language.
+- **Do** keep error and low-confidence states explicit.
+- **Don't** use heavy gradients or sci-fi styling.
+- **Don't** crowd the screen with charts or debug text.
+- **Don't** make the app feel like a Kaggle notebook pasted into a browser.
+
+## Product Context
+
+The underlying product goal is still the same:
+
+1. Validate BirdCLEF 2024 model quality.
+2. Ship a usable demo quickly.
+3. Move to fully in-browser ONNX inference once parity is strong enough.
+
+## Implementation Notes
+
+The current app already follows this direction:
+
+- React + Vite PWA scaffold
+- WebAudio recording pipeline
+- Pure JS mel spectrogram preprocessing
+- onnxruntime-web inference hook
+- Demo mode while the real ONNX model is staged
+
+The design system should stay aligned with those implementation constraints.

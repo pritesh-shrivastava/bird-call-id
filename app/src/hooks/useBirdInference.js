@@ -1,11 +1,15 @@
 import { useState, useRef, useCallback } from 'react'
 import { computeMelSpectrogram, MEL_PARAMS } from '../utils/melSpectrogram'
+import { BIRD_CLASS_LABELS } from '../utils/classLabels'
+import {
+  buildInferenceResult,
+  mockInferenceResult,
+} from '../utils/inferenceHelpers'
 
 // When the ONNX model is ready, set MODEL_URL to the path of the .onnx file
 // placed in public/model/birdclef.onnx (or use CDN URL).
 // Quantized int8 target: ~6MB. See DESIGN.md § "ONNX Export".
 const MODEL_URL = '/model/birdclef.onnx'
-const CONFIDENCE_THRESHOLD = 0.4
 
 export function useBirdInference() {
   const [status, setStatus] = useState('idle') // idle | loading | inferring | done | error
@@ -27,16 +31,11 @@ export function useBirdInference() {
     setStatus('loading')
 
     // Check if model file is available; fall back to mock if not
-    let modelAvailable = false
     try {
       const res = await fetch(MODEL_URL, { method: 'HEAD' })
-      modelAvailable = res.ok
+      if (!res.ok) return mockInferenceResult()
     } catch {
-      modelAvailable = false
-    }
-
-    if (!modelAvailable) {
-      return mockInference(samples)
+      return mockInferenceResult()
     }
 
     try {
@@ -55,14 +54,9 @@ export function useBirdInference() {
 
       const logits = output[session.outputNames[0]].data
       const probs = softmax(logits)
-      const topK = getTopK(probs, 3)
 
       setStatus('done')
-      return {
-        topPrediction: topK[0],
-        topK,
-        detected: topK[0].confidence >= CONFIDENCE_THRESHOLD,
-      }
+      return buildInferenceResult(probs, BIRD_CLASS_LABELS)
     } catch (err) {
       console.error('Inference error:', err)
       setStatus('error')
@@ -71,24 +65,6 @@ export function useBirdInference() {
   }, [loadSession])
 
   return { infer, status }
-}
-
-function mockInference(samples) {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const mockResults = [
-        { label: 'malbab1', confidence: 0.82 },
-        { label: 'malpie1', confidence: 0.11 },
-        { label: 'indpea1', confidence: 0.04 },
-      ]
-      resolve({
-        topPrediction: mockResults[0],
-        topK: mockResults,
-        detected: true,
-        isMock: true,
-      })
-    }, 800)
-  })
 }
 
 function padOrTrim(data, nMels, nFrames, targetFrames) {
@@ -107,12 +83,4 @@ function softmax(logits) {
   const exp = Array.from(logits).map(x => Math.exp(x - max))
   const sum = exp.reduce((a, b) => a + b, 0)
   return exp.map(x => x / sum)
-}
-
-function getTopK(probs, k) {
-  // Import label list at runtime to avoid bloating this file
-  return probs
-    .map((conf, i) => ({ label: `species_${i}`, confidence: conf, idx: i }))
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, k)
 }

@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:labels": "node scripts/check-label-parity.mjs",
+    "prepare:onnx": "node scripts/prepare-onnx-assets.mjs",
+    "demo:check": "node scripts/demo-check.mjs"
   },
   "dependencies": {
     "meyda": "^5.6.3",

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 
 export function RecordButton({ state, progress, onStart, onCancel }) {
   const isRecording = state === 'recording'
