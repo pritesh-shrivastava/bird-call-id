@@ -40,19 +40,22 @@
 - [ ] Test ONNX inference locally with `onnxruntime`
 
 ### Browser Audio Pipeline
-- [ ] Scaffold React + Vite PWA (`vite-plugin-pwa`)
-- [ ] Implement WebAudio API recording: press-and-hold 5 seconds
-- [ ] Implement mel spectrogram in JS using `meyda.js` with matching params (32kHz, n_mels=128, hop_length=320, n_fft=1024)
-- [ ] **Validate meyda.js output vs librosa on 5 test clips** — must match before trusting inference
-- [ ] Load ONNX model with `onnxruntime-web`
-- [ ] Wire recording → spectrogram → ONNX inference → display top prediction
+- [x] Scaffold React + Vite PWA (`vite-plugin-pwa`)
+- [x] Implement WebAudio API recording: press-and-hold 5 seconds (`useAudioRecorder.js`)
+- [x] Implement mel spectrogram in pure JS with matching params — sr=32kHz, n_mels=128, hop_length=320, n_fft=1024, fmin=20, fmax=16000 (`melSpectrogram.js`)
+- [ ] **Validate mel spectrogram JS output vs librosa on 5 test clips** — must match before trusting inference
+- [x] Wire up `onnxruntime-web` inference hook with mock fallback (`useBirdInference.js`)
+- [ ] Drop real ONNX model into `app/public/model/birdclef.onnx`
+- [ ] Update `getTopK()` with the 182-label list from `train_metadata.csv`
+- [ ] End-to-end test: recording → spectrogram → ONNX inference → correct prediction
 
 ### UX
-- [ ] Press-and-hold record button (5s countdown)
-- [ ] Show top prediction + confidence score
-- [ ] Show "No bird detected" when confidence < 0.4
-- [ ] Add species info (common name, scientific name, image thumbnail)
-- [ ] PWA manifest + service worker for offline + installability
+- [x] Press-and-hold record button (5s countdown + progress ring)
+- [x] Live waveform visualizer during recording
+- [x] Show top prediction + confidence score
+- [x] Show "No bird detected" when confidence < 0.4
+- [ ] Add species info images (thumbnail from Wikipedia/iNaturalist)
+- [x] PWA manifest + service worker for offline + installability
 
 ### Deployment
 - [ ] Deploy to Vercel or Cloudflare Pages (static, free tier)
@@ -63,7 +66,9 @@
 
 ## Portfolio Wrap-Up
 
-- [ ] Clean GitHub README: demo GIF, architecture diagram, preprocessing spec, results vs baseline
+- [ ] Add demo GIF to README
 - [ ] Add training notebook to repo (cleaned, with markdown cells explaining each step)
+- [ ] Add architecture diagram to README
+- [ ] Update README Results table with final cmAP, model size, inference latency
 - [ ] Add link to HF model card and live PWA demo in README
 - [ ] Post to LinkedIn with demo video
