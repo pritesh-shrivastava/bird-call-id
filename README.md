@@ -1,112 +1,131 @@
 # Bird Call ID
 
-Identify Western Ghats bird species from their calls — in the browser, offline, no backend.
+Identify Western Ghats bird species from their calls — in the browser, offline, with no backend required during inference.
 
-Hold your phone up to a bird, tap record, get an ID in seconds. Shazam for birds.
+**One-line pitch:** hold up your phone, record 5 seconds of birdsong, and get a species prediction in seconds. Think *Shazam for birds*, but designed for low-connectivity field use.
 
-**Live demo:** _(coming after Phase 1 training)_
+**Current state:** the PWA, recording flow, browser-side mel spectrogram pipeline, and ONNX inference scaffolding are built. The repo still runs in demo mode until the trained BirdCLEF model is exported and dropped into `app/public/model/birdclef.onnx`.
+
+**Live demo:** not published yet. Local demo mode works today; hosted demo comes after model export + parity validation.
 
 ---
 
-## What makes this interesting
+## Why this is a strong portfolio project
 
-Most BirdCLEF notebooks stay on Kaggle. This one ships as a working product:
+Most BirdCLEF projects stop at a notebook. This one is explicitly about taking ML all the way to product shape:
 
-- Fine-tuned EfficientNet-B0 on BirdCLEF 2024 (182 Western Ghats species)
-- Exported to ONNX and run entirely in the browser via `onnxruntime-web`
-- No backend call during inference — works offline once loaded
-- Installable as a PWA on Android and iOS
+- fine-tuned bird-audio classifier for **182 Western Ghats species**
+- **browser-only inference path** via `onnxruntime-web`
+- no backend dependency during prediction
+- **PWA installable** on mobile for field use
+- careful preprocessing parity work so browser inference matches training-time audio transforms
+
+It shows the full stack of applied ML product work:
+- dataset constraints
+- audio preprocessing correctness
+- model export / deployment trade-offs
+- frontend UX for capture + inference
+- offline-first delivery
+
+---
+
+## What works right now
+
+### Product surface
+- React + Vite PWA scaffold
+- 5-second microphone recording flow in the browser
+- waveform / recording UI
+- result card UI for predictions
+- installable PWA shell
+
+### ML/inference plumbing
+- pure-JS mel spectrogram pipeline
+- centered reflect padding to better mirror `librosa` framing
+- ONNX Runtime Web integration path
+- mock/demo inference fallback when model assets are absent
+- label-order validation script to keep training metadata aligned with inference labels
+
+### DX / verification
+- build passes
+- lint passes
+- demo wiring checks pass
+- ONNX asset prep script is included
 
 ---
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                    Browser (PWA)                    │
-│                                                     │
-│  WebAudio API → Mel Spectrogram → ONNX Runtime     │
-│  (32kHz, 5s)   (128×501, pure JS)  (EfficientNet)  │
-│                                                     │
-│  No network call during inference                   │
-└─────────────────────────────────────────────────────┘
+```text
+┌──────────────────────────────────────────────────────────────┐
+│                      Browser / PWA                           │
+│                                                              │
+│  WebAudio capture → Mel spectrogram → ONNX Runtime Web       │
+│  (32 kHz, 5 s)      (128 × 501, JS)  (EfficientNet-B0 ONNX)  │
+│                                                              │
+│  No backend call required during inference                   │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-**Training stack:** PyTorch · torchaudio · Kaggle GPU (P100)  
-**Dataset:** BirdCLEF 2024 — 182 Western Ghats species, ~60k clips  
-**App stack:** React · Vite · onnxruntime-web · vite-plugin-pwa  
+**Training stack:** PyTorch · torchaudio · Kaggle GPU  
+**Dataset:** BirdCLEF 2024 — Western Ghats, 182 species, ~60k clips  
+**App stack:** React · Vite · `onnxruntime-web` · `vite-plugin-pwa`
 
 ---
 
-## Preprocessing spec
+## Preprocessing contract
 
-These parameters must match exactly between training (librosa) and inference (browser JS). Any mismatch silently degrades accuracy.
+Browser inference is only trustworthy if preprocessing matches training exactly.
 
 | Parameter | Value |
-|-----------|-------|
+|---|---|
 | Sample rate | 32000 Hz |
 | Clip length | 5 seconds |
-| n_fft | 1024 |
-| hop_length | 320 |
-| n_mels | 128 |
-| fmin | 20 Hz |
-| fmax | 16000 Hz |
-| Output shape | (128, 501) float32 |
-| Mel scale | Slaney (htk=False) |
-| Normalization | power → dB, top_db=80 |
+| `n_fft` | 1024 |
+| `hop_length` | 320 |
+| `n_mels` | 128 |
+| `fmin` | 20 Hz |
+| `fmax` | 16000 Hz |
+| Output shape | `(128, 501)` float32 |
+| Mel scale | Slaney (`htk=False`) |
+| Normalization | power → dB, `top_db=80` |
 
-Browser implementation: `app/src/utils/melSpectrogram.js` (pure JS, no deps, centered reflect padding to mirror librosa framing).  
-Validate against librosa on 5 test clips before trusting inference.
+Implementation location: `app/src/utils/melSpectrogram.js`
+
+Until the real model is plugged in, treat this repo as **product scaffolding plus inference-contract work**, not a finished accuracy claim.
 
 ---
 
-## Project structure
+## Repo structure
 
-```
+```text
 bird-call-id/
-├── app/                        # React PWA
-│   └── src/
-│       ├── hooks/
-│       │   ├── useAudioRecorder.js   # WebAudio 5s recording
-│       │   └── useBirdInference.js   # ONNX inference + mock
-│       ├── utils/
-│       │   ├── melSpectrogram.js     # FFT + mel filterbank (center-padded reflect framing)
-│       │   ├── birdData.js           # Species labels + metadata
-│       │   ├── classLabels.js        # BirdCLEF 2024 label order
-│       │   └── inferenceHelpers.js   # top-K + mock inference helpers
-│       └── components/
-│           ├── RecordButton.jsx
-│           ├── WaveformVisualizer.jsx
-│           └── ResultCard.jsx
-├── DESIGN.md                   # Architecture decisions
-├── TODOS.md                    # Phase-by-phase task list
+├── app/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── RecordButton.jsx
+│   │   │   ├── ResultCard.jsx
+│   │   │   └── WaveformVisualizer.jsx
+│   │   ├── hooks/
+│   │   │   ├── useAudioRecorder.js
+│   │   │   └── useBirdInference.js
+│   │   └── utils/
+│   │       ├── birdData.js
+│   │       ├── classLabels.js
+│   │       ├── inferenceHelpers.js
+│   │       └── melSpectrogram.js
+│   ├── scripts/
+│   │   ├── check-label-parity.mjs
+│   │   ├── demo-check.mjs
+│   │   └── prepare-onnx-assets.mjs
+│   └── public/
+├── DESIGN.md
+├── TODOS.md
 └── README.md
 ```
 
-Training notebook and model card will be added after Phase 1.
-
 ---
 
-## Roadmap
-
-**Phase 1 — HF Spaces demo** _(in progress)_
-- [ ] Train EfficientNet-B0 on BirdCLEF 2024 (Kaggle GPU)
-- [ ] Push checkpoint to Hugging Face Hub
-- [ ] Deploy Gradio demo to HF Spaces
-- Target: cmAP ≥ 0.65 on public validation set
-
-**Phase 2 — ONNX PWA** _(scaffolded)_
-- [x] React + Vite PWA scaffold
-- [x] WebAudio recording pipeline
-- [x] Mel spectrogram in pure JS
-- [x] onnxruntime-web inference hook
-- [ ] Export PyTorch model to ONNX
-- [ ] Validate ONNX parity with PyTorch (>99% top-1 match)
-- [ ] Deploy to Vercel
-
----
-
-## Running locally
+## Run locally
 
 ```bash
 cd app
@@ -114,40 +133,76 @@ npm install
 npm run dev
 ```
 
-The app runs in demo mode (mock predictions) until the ONNX model is placed at `app/public/model/birdclef.onnx`. If the model is absent, the UI now falls back to the mock result and returns to the ready state instead of hanging on loading.
+If `app/public/model/birdclef.onnx` is missing, the app intentionally falls back to demo predictions and returns to the ready state instead of hanging on loading.
 
-### Utility scripts
+### Verification commands
 
 ```bash
-npm run check:labels   # verify BirdCLEF label order + mapping helpers
-npm run prepare:onnx   # copy ONNX Runtime browser assets into public/ort-wasm
-npm run demo:check     # verify mock/demo wiring and prep state
+npm run build
+npm run lint
+npm run check:labels
+npm run prepare:onnx
+npm run demo:check
 ```
 
 ---
 
-## Plugging in the real model
+## Plug in the real model
 
-Once the ONNX model is trained and exported:
+Once training/export is done:
 
-1. Copy `birdclef.onnx` → `app/public/model/birdclef.onnx`
-2. Copy the `ort-wasm/` files from `node_modules/onnxruntime-web/dist/` → `app/public/ort-wasm/`
-3. Label order is centralized in `app/src/utils/classLabels.js` and verified by `npm run check:labels`; keep it synced with `train_metadata.csv` when the model metadata changes.
+1. Copy `birdclef.onnx` to `app/public/model/birdclef.onnx`
+2. Copy ONNX Runtime browser assets into `app/public/ort-wasm/`
+3. Keep `app/src/utils/classLabels.js` aligned with training metadata
+4. Validate ONNX vs PyTorch parity before trusting top-1 predictions
+
+---
+
+## Roadmap
+
+### Phase 1 — model + hosted demo
+- [ ] train EfficientNet-B0 on BirdCLEF 2024
+- [ ] export checkpoint / artifacts
+- [ ] push model to Hugging Face Hub
+- [ ] deploy hosted demo
+- [ ] validate public-val cmAP target
+
+### Phase 2 — production-quality browser inference
+- [x] PWA scaffold
+- [x] microphone capture flow
+- [x] pure-JS mel spectrogram implementation
+- [x] ONNX Runtime Web hook-up
+- [ ] export final ONNX model
+- [ ] verify ONNX / PyTorch parity (>99% top-1 agreement on held-out checks)
+- [ ] benchmark inference on a mid-range Android device
+- [ ] deploy to Vercel or equivalent
 
 ---
 
 ## Dataset
 
-[BirdCLEF 2024](https://www.kaggle.com/competitions/birdclef-2024) — Western Ghats of India, 182 species, ~60k training clips at 32kHz.
+[BirdCLEF 2024](https://www.kaggle.com/competitions/birdclef-2024) — Western Ghats of India, 182 species, roughly 60k training clips.
 
 ---
 
-## Results
+## Planned results section
 
-_(To be updated after training)_
+To be filled in after training/export:
 
-| Metric | Value |
-|--------|-------|
-| Val cmAP | — |
-| Model size (ONNX) | — |
-| Inference time (mid-range Android) | — |
+- validation cmAP
+- ONNX model size
+- browser inference latency
+- mobile memory footprint
+- qualitative field-test notes
+
+---
+
+## Good interview talking points
+
+If you are using this repo in a portfolio, the strongest discussion angles are:
+
+- why offline / browser-only inference matters for field use
+- how easy it is to silently break audio-model accuracy with preprocessing drift
+- why label-order parity matters in exported classifiers
+- how to degrade gracefully when model assets are missing
+- trade-offs between notebook accuracy and product reliability
