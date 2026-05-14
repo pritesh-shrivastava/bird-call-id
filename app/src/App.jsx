@@ -4,8 +4,16 @@ import { ResultCard } from './components/ResultCard'
 import { WaveformVisualizer } from './components/WaveformVisualizer'
 import { useAudioRecorder } from './hooks/useAudioRecorder'
 import { useBirdInference } from './hooks/useBirdInference'
+import { mockInferenceResult } from './utils/inferenceHelpers'
+
+function getShowcaseMode() {
+  if (typeof window === 'undefined') return null
+  const mode = new URLSearchParams(window.location.search).get('showcase')
+  return ['hero', 'recording', 'result', 'error'].includes(mode) ? mode : null
+}
 
 export default function App() {
+  const showcaseMode = getShowcaseMode()
   const { record, cancel, state: recState, progress, waveform } = useAudioRecorder()
   const { infer, status: inferStatus } = useBirdInference()
   const [result, setResult] = useState(null)
@@ -13,6 +21,17 @@ export default function App() {
   const combinedState = inferStatus === 'loading' || inferStatus === 'inferring'
     ? inferStatus
     : recState
+
+  const displayState = showcaseMode === 'recording'
+    ? 'recording'
+    : showcaseMode === 'error'
+      ? 'error'
+      : combinedState
+  const displayProgress = showcaseMode === 'recording' ? 0.64 : progress
+  const displayWaveform = showcaseMode === 'recording'
+    ? Float32Array.from({ length: 64 }, (_, i) => Math.abs(Math.sin(i / 4)) * (i % 5 === 0 ? 0.9 : 0.55))
+    : waveform
+  const displayResult = showcaseMode === 'result' ? mockInferenceResult() : result
 
   const handleStart = useCallback(async () => {
     setResult(null)
@@ -59,21 +78,21 @@ export default function App() {
 
         {/* Waveform */}
         <WaveformVisualizer
-          waveform={waveform}
-          active={recState === 'recording'}
+          waveform={displayWaveform}
+          active={displayState === 'recording'}
         />
 
         {/* Record button */}
         <RecordButton
-          state={combinedState}
-          progress={progress}
+          state={displayState}
+          progress={displayProgress}
           onStart={handleStart}
           onCancel={handleCancel}
         />
 
         {/* Result */}
-        {result && (
-          <ResultCard result={result} />
+        {displayResult && (
+          <ResultCard result={displayResult} />
         )}
       </main>
 

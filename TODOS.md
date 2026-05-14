@@ -1,5 +1,47 @@
 # Bird Call ID — Todos
 
+Last updated: 2026-05-14 IST
+
+## Pending non-coding tasks from Pritesh's end for deploy
+
+These are the user-side tasks needed before a real public deploy makes sense.
+
+- [ ] Decide what you want the *first public deploy* to be:
+  - demo-mode PWA only, or
+  - model-backed PWA with the real ONNX artifact
+- [ ] Create / confirm access to the accounts needed for shipping:
+  - Kaggle (for BirdCLEF 2024 training access)
+  - Hugging Face (for model hosting/model card if used)
+  - Vercel or Cloudflare Pages (for static app hosting)
+- [ ] Accept the BirdCLEF 2024 competition rules on Kaggle.
+- [ ] Decide the final public project naming you want on resume/portfolio:
+  - repo name
+  - hosted app name
+  - model name/card name
+- [ ] Decide where the model artifact will live for the public version:
+  - committed/staged with the app, or
+  - hosted separately on Hugging Face Hub / another artifact host
+- [ ] Finish or obtain the trained checkpoint / exported ONNX artifact needed for a real deploy.
+- [ ] Gather the exact model-side assets needed for the frontend:
+  - `birdclef.onnx`
+  - matching label metadata
+  - ONNX Runtime browser assets if required
+- [ ] Collect a small real-world smoke-test set for launch validation:
+  - at least 10 bird-call clips
+  - ideally Western Ghats / India-relevant examples
+- [ ] Decide whether the public launch should happen only after ONNX/PyTorch parity is validated, or whether you want an earlier demo-mode portfolio deploy first.
+- [ ] Once the hosted app is up, run one manual smoke test on mobile and one on desktop.
+- [ ] Send me either the live URL or the exact deploy/runtime issue once you reach that point.
+
+## Deployment blockers to clear before public launch
+
+Grounded in the current repo state:
+- `README.md` says the app still runs in demo mode until the trained BirdCLEF model is exported and dropped into `app/public/model/birdclef.onnx`.
+- `README.md` also says the live demo is not published yet and hosted demo comes after model export + parity validation.
+- The current app is already in good shape as a PWA/demo scaffold; the biggest remaining blocker is model artifact readiness plus deployment decisions.
+
+---
+
 ## Phase 1: Fine-Tune + HF Spaces Demo
 
 ### Dataset & Environment

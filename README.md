@@ -53,6 +53,23 @@ It shows the full stack of applied ML product work:
 
 ---
 
+## Screenshots
+
+Real screenshots from the current PWA running in demo mode.
+
+<p align="center">
+  <img src="docs/images/showcase-hero.png" alt="Bird Call ID hero screen" width="30%" />
+  <img src="docs/images/showcase-recording.png" alt="Bird Call ID recording screen" width="30%" />
+  <img src="docs/images/showcase-result.png" alt="Bird Call ID result card screen" width="30%" />
+</p>
+
+Left to right:
+- idle hero screen
+- active recording state with progress ring + waveform
+- mock inference result card shown when model assets are not staged yet
+
+---
+
 ## Architecture
 
 ```text
