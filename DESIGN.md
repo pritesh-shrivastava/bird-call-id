@@ -182,8 +182,8 @@ The current app already follows this direction:
 
 - React + Vite PWA scaffold
 - WebAudio recording pipeline
-- Pure JS mel spectrogram preprocessing
+- Pure JS mel spectrogram preprocessing with centered reflect padding to match librosa framing
 - onnxruntime-web inference hook
-- Demo mode while the real ONNX model is staged
+- Demo mode while the real ONNX model is staged; missing model files fall back to the mock result instead of leaving the UI stuck in loading
 
 The design system should stay aligned with those implementation constraints.

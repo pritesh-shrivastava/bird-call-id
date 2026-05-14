@@ -30,11 +30,15 @@ export function useBirdInference() {
   const infer = useCallback(async (samples) => {
     setStatus('loading')
 
-    // Check if model file is available; fall back to mock if not
+    // If the model is not staged yet, keep the demo usable by returning the mock result.
     try {
       const res = await fetch(MODEL_URL, { method: 'HEAD' })
-      if (!res.ok) return mockInferenceResult()
+      if (!res.ok) {
+        setStatus('done')
+        return mockInferenceResult()
+      }
     } catch {
+      setStatus('done')
       return mockInferenceResult()
     }
 

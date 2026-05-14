@@ -12,7 +12,8 @@ export const MEL_PARAMS = {
   clipDuration: 5,
 }
 
-// Expected output shape: (128, 501) for a 5-second clip at 32kHz
+// Expected output shape: (128, 501) for a 5-second clip at 32kHz.
+// We mirror librosa's default centered framing with reflect padding.
 
 function hannWindow(n) {
   const w = new Float32Array(n)
@@ -117,6 +118,27 @@ function buildMelFilterbank(sr, nFft, nMels, fmin, fmax) {
   return weights
 }
 
+function reflectPad(samples, padWidth) {
+  const length = samples.length
+  if (length === 0) {
+    return new Float32Array(padWidth * 2)
+  }
+
+  const out = new Float32Array(length + padWidth * 2)
+  for (let i = 0; i < out.length; i++) {
+    let src = i - padWidth
+    if (src < 0) {
+      src = -src
+    } else if (src >= length) {
+      src = 2 * length - src - 2
+    }
+    if (src < 0) src = 0
+    if (src >= length) src = length - 1
+    out[i] = samples[src]
+  }
+  return out
+}
+
 const TOP_DB = 80.0
 
 function powerToDb(spec, nMels, nFrames) {
@@ -135,7 +157,9 @@ function powerToDb(spec, nMels, nFrames) {
 // Feed to ONNX as shape [1, 1, nMels, nFrames].
 export function computeMelSpectrogram(samples, params = MEL_PARAMS) {
   const { sr, nMels, hopLength, nFft, fmin, fmax } = params
-  const nFrames = Math.floor((samples.length - nFft) / hopLength) + 1
+  const padWidth = Math.floor(nFft / 2)
+  const padded = reflectPad(samples, padWidth)
+  const nFrames = Math.floor((padded.length - nFft) / hopLength) + 1
   const nFreqs = Math.floor(nFft / 2) + 1
   const window = hannWindow(nFft)
   const filterbank = buildMelFilterbank(sr, nFft, nMels, fmin, fmax)
@@ -149,7 +173,7 @@ export function computeMelSpectrogram(samples, params = MEL_PARAMS) {
     re.fill(0)
     im.fill(0)
     for (let i = 0; i < nFft; i++) {
-      re[i] = (offset + i < samples.length ? samples[offset + i] : 0) * window[i]
+      re[i] = (offset + i < padded.length ? padded[offset + i] : 0) * window[i]
     }
     fft(re, im)
     // Power spectrum

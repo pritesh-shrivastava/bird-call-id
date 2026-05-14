@@ -55,7 +55,7 @@ These parameters must match exactly between training (librosa) and inference (br
 | Mel scale | Slaney (htk=False) |
 | Normalization | power → dB, top_db=80 |
 
-Browser implementation: `app/src/utils/melSpectrogram.js` (pure JS, no deps).  
+Browser implementation: `app/src/utils/melSpectrogram.js` (pure JS, no deps, centered reflect padding to mirror librosa framing).  
 Validate against librosa on 5 test clips before trusting inference.
 
 ---
@@ -70,8 +70,10 @@ bird-call-id/
 │       │   ├── useAudioRecorder.js   # WebAudio 5s recording
 │       │   └── useBirdInference.js   # ONNX inference + mock
 │       ├── utils/
-│       │   ├── melSpectrogram.js     # FFT + mel filterbank
-│       │   └── birdData.js           # Species labels + metadata
+│       │   ├── melSpectrogram.js     # FFT + mel filterbank (center-padded reflect framing)
+│       │   ├── birdData.js           # Species labels + metadata
+│       │   ├── classLabels.js        # BirdCLEF 2024 label order
+│       │   └── inferenceHelpers.js   # top-K + mock inference helpers
 │       └── components/
 │           ├── RecordButton.jsx
 │           ├── WaveformVisualizer.jsx
@@ -112,7 +114,7 @@ npm install
 npm run dev
 ```
 
-The app runs in demo mode (mock predictions) until the ONNX model is placed at `app/public/model/birdclef.onnx`.
+The app runs in demo mode (mock predictions) until the ONNX model is placed at `app/public/model/birdclef.onnx`. If the model is absent, the UI now falls back to the mock result and returns to the ready state instead of hanging on loading.
 
 ### Utility scripts
 
@@ -130,7 +132,7 @@ Once the ONNX model is trained and exported:
 
 1. Copy `birdclef.onnx` → `app/public/model/birdclef.onnx`
 2. Copy the `ort-wasm/` files from `node_modules/onnxruntime-web/dist/` → `app/public/ort-wasm/`
-3. Update `getTopK()` in `useBirdInference.js` to use the 182-label list from `train_metadata.csv`
+3. Label order is centralized in `app/src/utils/classLabels.js` and verified by `npm run check:labels`; keep it synced with `train_metadata.csv` when the model metadata changes.
 
 ---
 

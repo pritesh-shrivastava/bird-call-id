@@ -43,10 +43,10 @@
 - [x] Scaffold React + Vite PWA (`vite-plugin-pwa`)
 - [x] Implement WebAudio API recording: press-and-hold 5 seconds (`useAudioRecorder.js`)
 - [x] Implement mel spectrogram in pure JS with matching params — sr=32kHz, n_mels=128, hop_length=320, n_fft=1024, fmin=20, fmax=16000 (`melSpectrogram.js`)
-- [ ] **Validate mel spectrogram JS output vs librosa on 5 test clips** — must match before trusting inference
+- [ ] **Validate mel spectrogram JS output vs librosa on 5 test clips** — centered reflect padding is implemented, but numeric parity still needs verification before trusting inference
 - [x] Wire up `onnxruntime-web` inference hook with mock fallback (`useBirdInference.js`)
 - [ ] Drop real ONNX model into `app/public/model/birdclef.onnx`
-- [ ] Update `getTopK()` with the 182-label list from `train_metadata.csv`
+- [x] Label order is centralized in `classLabels.js` and verified by `npm run check:labels` — keep it synced with `train_metadata.csv` when model metadata changes
 - [ ] End-to-end test: recording → spectrogram → ONNX inference → correct prediction
 
 ### UX
